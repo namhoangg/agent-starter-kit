@@ -1,0 +1,218 @@
+---
+description: Error handling best practices and patterns
+alwaysApply: true
+---
+
+# Error Handling
+
+## Prefer Exceptions Over Error Codes
+
+```typescript
+❌ BAD: Error codes lead to nested conditions
+if (deletePage(page) === E_OK) {
+  if (registry.deleteReference(page.name) === E_OK) {
+    if (configKeys.deleteKey(page.name.makeKey()) === E_OK) {
+      logger.log("page deleted");
+    } else {
+      logger.log("configKey not deleted");
+    }
+  } else {
+    logger.log("deleteReference failed");
+  }
+} else {
+  logger.log("delete failed");
+}
+
+✅ GOOD: Exceptions separate happy path from error handling
+try {
+  deletePage(page);
+  registry.deleteReference(page.name);
+  configKeys.deleteKey(page.name.makeKey());
+} catch (error) {
+  logger.error("Failed to delete page", { error });
+}
+```
+
+## Extract Try-Catch Bodies
+
+Keep try-catch blocks clean by extracting logic.
+
+```typescript
+✅ GOOD: Separated concerns
+async function deleteUser(userId: string): Promise<void> {
+  try {
+    await performUserDeletion(userId);
+  } catch (error) {
+    handleDeletionError(error, userId);
+  }
+}
+
+async function performUserDeletion(userId: string): Promise<void> {
+  await userRepository.delete(userId);
+  await sessionService.invalidateUserSessions(userId);
+  await notificationService.sendDeletionConfirmation(userId);
+}
+
+function handleDeletionError(error: Error, userId: string): void {
+  logger.error("User deletion failed", { userId, error });
+  throw new UserDeletionException(userId, error);
+}
+```
+
+## Use Custom Exceptions
+
+Create specific exception types for different error cases.
+
+```typescript
+// Define custom exceptions
+class ValidationException extends Error {
+  constructor(public readonly field: string, message: string) {
+    super(message);
+    this.name = 'ValidationException';
+  }
+}
+
+class NotFoundException extends Error {
+  constructor(public readonly resource: string, public readonly id: string) {
+    super(`${resource} with id ${id} not found`);
+    this.name = 'NotFoundException';
+  }
+}
+
+class UnauthorizedException extends Error {
+  constructor(message = 'Unauthorized access') {
+    super(message);
+    this.name = 'UnauthorizedException';
+  }
+}
+
+// Usage
+function getUser(id: string): User {
+  const user = userRepository.findById(id);
+  if (!user) {
+    throw new NotFoundException('User', id);
+  }
+  return user;
+}
+```
+
+## Don't Ignore Exceptions
+
+```typescript
+❌ BAD: Swallowing exceptions
+try {
+  riskyOperation();
+} catch (error) {
+  // Silent failure - problems are hidden
+}
+
+❌ BAD: Only logging
+try {
+  riskyOperation();
+} catch (error) {
+  console.log(error);  // Then what?
+}
+
+✅ GOOD: Handle appropriately
+try {
+  riskyOperation();
+} catch (error) {
+  logger.error("Operation failed", { error });
+  throw new OperationFailedException(error);
+}
+
+✅ GOOD: Graceful degradation
+try {
+  return await fetchFromPrimary();
+} catch (error) {
+  logger.warn("Primary failed, using fallback", { error });
+  return await fetchFromFallback();
+}
+```
+
+## Fail Fast
+
+Validate early and fail immediately when something is wrong.
+
+```typescript
+✅ GOOD: Early validation
+function processPayment(payment: PaymentRequest): PaymentResult {
+  // Fail fast on invalid input
+  if (!payment.amount || payment.amount <= 0) {
+    throw new ValidationException('amount', 'Must be positive');
+  }
+  if (!payment.currency) {
+    throw new ValidationException('currency', 'Required');
+  }
+  if (!isValidCurrency(payment.currency)) {
+    throw new ValidationException('currency', 'Invalid currency code');
+  }
+  
+  // Happy path - all validations passed
+  return executePayment(payment);
+}
+```
+
+## Null Handling
+
+Avoid returning null; use alternatives.
+
+```typescript
+❌ BAD: Returning null
+function findUser(id: string): User | null {
+  // Caller must remember to check for null
+}
+
+✅ GOOD: Use Optional/Maybe pattern
+function findUser(id: string): Optional<User> {
+  // Forces caller to handle absence
+}
+
+✅ GOOD: Throw exception for "must exist" cases
+function getUser(id: string): User {
+  const user = repository.findById(id);
+  if (!user) {
+    throw new NotFoundException('User', id);
+  }
+  return user;
+}
+
+✅ GOOD: Return empty collection instead of null
+function findUsersByRole(role: string): User[] {
+  return repository.findByRole(role) ?? [];
+}
+```
+
+## Error Messages
+
+Make error messages helpful:
+
+```typescript
+❌ BAD
+throw new Error("Invalid input");
+throw new Error("Failed");
+
+✅ GOOD
+throw new Error(`Invalid email format: ${email}`);
+throw new Error(`Payment failed for order ${orderId}: ${reason}`);
+throw new ValidationException(
+  'email',
+  `Email must be a valid address, got: ${email}`
+);
+```
+
+## Logging Errors
+
+Include context in error logs:
+
+```typescript
+✅ GOOD: Structured logging with context
+logger.error("Payment processing failed", {
+  orderId: order.id,
+  userId: order.userId,
+  amount: order.total,
+  paymentMethod: order.paymentMethod,
+  error: error.message,
+  stack: error.stack
+});
+```

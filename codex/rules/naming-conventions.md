@@ -1,0 +1,143 @@
+# Naming Conventions
+
+## Core Principles
+
+Names should be **self-documenting**. If a name needs a comment to explain it, it's not a good name.
+
+## Variable Names
+
+```
+❌ BAD
+int d; // elapsed time in days
+string s; // user name
+
+✅ GOOD
+int elapsedTimeInDays;
+string userName;
+```
+
+## Avoid Disinformation
+
+Names must accurately describe what they represent.
+
+```
+❌ BAD: accountList (when it's not actually a List type)
+✅ GOOD: accounts (or accountList only if it IS a List)
+```
+
+## Meaningful Distinctions
+
+Names should differ because they represent different things, not just to satisfy the compiler.
+
+```
+❌ BAD (redundant/meaningless variations)
+Product, ProductData, ProductInfo
+Customer, CustomerObject
+NameString, moneyAmount
+
+✅ GOOD
+Product, ProductDetails, ProductSummary
+Customer, CustomerProfile
+name, amount
+```
+
+## Pronounceable Names
+
+```
+❌ BAD: genymdhms, modymdhms
+✅ GOOD: generationTimestamp, modificationTimestamp
+```
+
+## Searchable Names
+
+Single-letter names make code unsearchable.
+
+```
+❌ BAD: s, e, t
+✅ GOOD: sum, error, total
+Exception: Loop counters (i, j, k) in small scopes
+```
+
+## No Type Encodings
+
+Don't encode type information into names.
+
+```
+❌ BAD: strName, intCount, boolIsActive
+✅ GOOD: name, count, isActive
+```
+
+## Interface vs Implementation
+
+Prefer clean interface names; put "ugliness" in implementations.
+
+```
+❌ BAD: IShapeFactory, IUserRepository
+✅ GOOD: ShapeFactory (interface), ShapeFactoryImpl (implementation)
+         UserRepository (interface), UserRepositoryImpl (implementation)
+```
+
+## Class Names
+
+- Use **nouns or noun phrases**: `Customer`, `WikiPage`, `Account`, `AddressParser`
+- **Avoid**: Manager, Processor, Data, Info (vague words)
+- **Never** use verbs for class names
+
+## Method Names
+
+- Use **verbs or verb phrases**: `postPayment`, `deletePage`, `save`
+- Accessors: `get` prefix (`getName`, `getBalance`)
+- Mutators: `set` prefix (`setName`, `setBalance`)
+- Predicates: `is`/`has`/`can` prefix (`isActive`, `hasPermission`, `canExecute`)
+
+```
+✅ Static factory methods with descriptive names
+Complex point = Complex.fromRealNumber(23.0);
+// Better than: new Complex(23.0);
+```
+
+## One Word Per Concept
+
+Be consistent with terminology across the codebase.
+
+```
+❌ BAD: Mixed terms
+fetchUser(), retrieveOrder(), getProduct()
+UserManager, OrderController, ProductHandler
+
+✅ GOOD: Consistent terms
+getUser(), getOrder(), getProduct()
+UserController, OrderController, ProductController
+```
+
+## No Puns
+
+Same word must mean the same thing everywhere.
+
+```
+❌ BAD: Using "add" for different operations
+add(a, b)     // combines two values
+add(item)     // appends to collection
+
+✅ GOOD: Different words for different operations
+add(a, b)     // combines two values
+append(item)  // appends to collection
+insert(item)  // puts into collection
+```
+
+## Add Meaningful Context
+
+```
+❌ BAD: state (ambiguous)
+✅ GOOD: addressState, applicationState, connectionState
+```
+
+## No Gratuitous Context
+
+Don't add unnecessary prefixes.
+
+```
+❌ BAD: GSDAccountAddress, appUserName
+✅ GOOD: AccountAddress, userName
+```
+

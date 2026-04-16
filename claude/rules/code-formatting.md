@@ -1,0 +1,191 @@
+# Code Formatting
+
+## File Size
+
+- **Target**: Under 200 lines
+- **Maximum**: 500 lines
+- If a file grows beyond this, consider splitting
+
+## Code Organization
+
+Structure code like a **newspaper**: high-level concepts at top, details below.
+
+```typescript
+// 1. Imports
+import { dependency } from 'module';
+
+// 2. Constants/Types (if file-level)
+const MAX_RETRIES = 3;
+
+// 3. Main class/function (the "headline")
+export class UserService {
+  // 4. Instance variables at top
+  private readonly repository: UserRepository;
+  
+  // 5. Constructor
+  constructor(repository: UserRepository) { ... }
+  
+  // 6. Public methods (high-level operations)
+  async createUser(data: UserData): Promise<User> { ... }
+  
+  // 7. Private methods (implementation details) - below public
+  private validateData(data: UserData): void { ... }
+}
+```
+
+## Vertical Spacing
+
+Use blank lines to **separate concepts**.
+
+```typescript
+✅ GOOD: Grouped and spaced
+function processOrder(order: Order) {
+  // Validation
+  validateOrder(order);
+  checkInventory(order.items);
+  
+  // Processing
+  const total = calculateTotal(order);
+  const tax = calculateTax(total);
+  
+  // Persistence
+  saveOrder(order);
+  updateInventory(order.items);
+}
+
+❌ BAD: No separation
+function processOrder(order: Order) {
+  validateOrder(order);
+  checkInventory(order.items);
+  const total = calculateTotal(order);
+  const tax = calculateTax(total);
+  saveOrder(order);
+  updateInventory(order.items);
+}
+```
+
+## Keep Related Code Close
+
+Variables should be declared **near their usage**.
+
+```typescript
+✅ GOOD
+function calculate() {
+  const basePrice = getBasePrice();
+  const discount = getDiscount();
+  const finalPrice = basePrice - discount;  // Near the values it uses
+  
+  const taxRate = getTaxRate();
+  const tax = finalPrice * taxRate;  // Near taxRate
+}
+
+❌ BAD
+function calculate() {
+  const basePrice = getBasePrice();
+  const discount = getDiscount();
+  const taxRate = getTaxRate();  // Declared far from usage
+  
+  const finalPrice = basePrice - discount;
+  // ... many lines ...
+  const tax = finalPrice * taxRate;  // taxRate was declared long ago
+}
+```
+
+## Line Length
+
+- **Target**: 80-100 characters
+- **Maximum**: 120 characters
+
+Break long lines logically:
+
+```typescript
+✅ GOOD
+const result = await userRepository.findByConditions({
+  status: 'active',
+  role: 'admin',
+  createdAfter: startDate,
+});
+
+❌ BAD
+const result = await userRepository.findByConditions({ status: 'active', role: 'admin', createdAfter: startDate });
+```
+
+## Horizontal Spacing
+
+```typescript
+✅ GOOD
+const total = price * quantity;
+function calculate(a, b) { ... }
+if (isValid) { ... }
+
+❌ BAD
+const total=price*quantity;
+function calculate ( a , b ) { ... }
+if( isValid ){ ... }
+```
+
+## Indentation
+
+- Use consistent indentation (2 or 4 spaces, or tabs)
+- Maximum nesting: 2-3 levels
+
+```typescript
+✅ GOOD: Flat structure
+function process(data) {
+  if (!isValid(data)) {
+    return handleInvalid(data);
+  }
+  
+  const result = transform(data);
+  return save(result);
+}
+
+❌ BAD: Deep nesting
+function process(data) {
+  if (data) {
+    if (isValid(data)) {
+      if (hasPermission()) {
+        if (isAvailable()) {
+          // Too deep!
+        }
+      }
+    }
+  }
+}
+```
+
+## No One-Liners for Blocks
+
+Even short blocks should be expanded:
+
+```typescript
+✅ GOOD
+if (isError) {
+  return handleError();
+}
+
+❌ BAD
+if (isError) { return handleError(); }
+```
+
+## Import Organization
+
+> Note: See also `no-inline-imports` rule for placement requirements.
+
+Group and order imports by type:
+
+```typescript
+// 1. Standard library
+import { readFile } from 'fs';
+
+// 2. External dependencies
+import express from 'express';
+import { Injectable } from '@nestjs/common';
+
+// 3. Internal modules (absolute paths)
+import { UserService } from '@/Service/UserService';
+
+// 4. Relative imports
+import { helper } from './helper';
+```
+

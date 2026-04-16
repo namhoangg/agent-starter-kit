@@ -1,0 +1,131 @@
+# SOLID Principles
+
+## S - Single Responsibility Principle (SRP)
+
+A class should have **one, and only one, reason to change**.
+
+```
+❌ BAD: Multiple responsibilities
+class UserService {
+  createUser(data) { ... }
+  validateEmail(email) { ... }
+  sendWelcomeEmail(user) { ... }
+  generateReport(users) { ... }
+  exportToCsv(users) { ... }
+}
+
+✅ GOOD: Separated responsibilities
+class UserService { createUser(data) { ... } }
+class EmailValidator { validate(email) { ... } }
+class EmailService { sendWelcomeEmail(user) { ... } }
+class UserReportGenerator { generate(users) { ... } }
+class CsvExporter { export(data) { ... } }
+```
+
+## O - Open/Closed Principle (OCP)
+
+Classes should be **open for extension, closed for modification**.
+
+```
+❌ BAD: Modifying existing code for new features
+class PaymentProcessor {
+  process(payment) {
+    if (payment.type === 'credit') { ... }
+    else if (payment.type === 'debit') { ... }
+    else if (payment.type === 'crypto') { ... }  // Added later
+  }
+}
+
+✅ GOOD: Extend through abstraction
+interface PaymentMethod {
+  process(payment): void
+}
+
+class CreditPayment implements PaymentMethod { ... }
+class DebitPayment implements PaymentMethod { ... }
+class CryptoPayment implements PaymentMethod { ... }  // New extension
+```
+
+## L - Liskov Substitution Principle (LSP)
+
+Subtypes must be **substitutable** for their base types without altering correctness.
+
+```
+❌ BAD: Square violates Rectangle behavior
+class Rectangle {
+  setWidth(w) { this.width = w; }
+  setHeight(h) { this.height = h; }
+}
+class Square extends Rectangle {
+  setWidth(w) { this.width = this.height = w; }  // Breaks expectations
+}
+
+✅ GOOD: Proper abstraction
+interface Shape {
+  getArea(): number
+}
+class Rectangle implements Shape { ... }
+class Square implements Shape { ... }
+```
+
+## I - Interface Segregation Principle (ISP)
+
+Clients should not be forced to depend on interfaces they don't use.
+
+```
+❌ BAD: Fat interface
+interface Worker {
+  work(): void
+  eat(): void
+  sleep(): void
+  attendMeeting(): void
+}
+// Robot must implement eat() and sleep()?
+
+✅ GOOD: Segregated interfaces
+interface Workable { work(): void }
+interface Eatable { eat(): void }
+interface Sleepable { sleep(): void }
+interface MeetingAttendee { attendMeeting(): void }
+
+class Human implements Workable, Eatable, Sleepable, MeetingAttendee { ... }
+class Robot implements Workable { ... }
+```
+
+## D - Dependency Inversion Principle (DIP)
+
+High-level modules should not depend on low-level modules. Both should depend on **abstractions**.
+
+```
+❌ BAD: Direct dependency on concrete class
+class UserController {
+  constructor() {
+    this.database = new MySQLDatabase();  // Tightly coupled
+  }
+}
+
+✅ GOOD: Depend on abstraction
+interface Database {
+  save(data): void
+  find(id): any
+}
+
+class UserController {
+  constructor(private database: Database) { }  // Injected abstraction
+}
+
+// Usage with dependency injection
+const controller = new UserController(new MySQLDatabase());
+const testController = new UserController(new MockDatabase());
+```
+
+## Quick Reference
+
+| Principle | Key Question |
+|-----------|--------------|
+| **SRP** | Does this class have only one reason to change? |
+| **OCP** | Can I add features without modifying existing code? |
+| **LSP** | Can I substitute a subclass without breaking behavior? |
+| **ISP** | Are my interfaces focused and minimal? |
+| **DIP** | Am I depending on abstractions, not concretions? |
+
